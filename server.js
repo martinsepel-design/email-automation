@@ -45,7 +45,9 @@ async function scrapeWeb(companyName) {
         console.log(`Searching for: ${companyName}`);
         
         // Spustit browser
-        browser = await puppeteer.launch({
+browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath,
             headless: true,
             args: [
                 '--no-sandbox',
