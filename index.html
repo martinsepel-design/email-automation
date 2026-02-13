@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Automatizace - FUNGUJE!</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .badge {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        .content { padding: 40px; }
+        .step {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        .step h2 { color: #333; margin-bottom: 15px; }
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .button:disabled { background: #ccc; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .progress {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 30px;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .email-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .email-card h4 { color: #667eea; margin-bottom: 10px; }
+        .email-subject {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .email-body {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .web-info {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .hidden { display: none; }
+        #fileInput { display: none; }
+        .file-upload-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Email Automatizace</h1>
+            <p>Node.js + Puppeteer - Profesionální web scraping</p>
+            <div class="badge">☁️ Běží na Renderu - Funguje 24/7!</div>
+        </div>
+        
+        <div class="content">
+            <div class="step">
+                <h2>📝 Krok 1: Nastavení</h2>
+                <div class="input-group">
+                    <label>Vaše jméno:</label>
+                    <input type="text" id="userName" value="Martin Šepel">
+                </div>
+                <div class="input-group">
+                    <label>Váš telefon:</label>
+                    <input type="text" id="userPhone" value="608507623">
+                </div>
+                <button class="button" onclick="saveSettings()">Uložit</button>
+                <div id="settingsStatus"></div>
+            </div>
+            
+            <div class="step">
+                <h2>📁 Krok 2: Nahrát Excel</h2>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
+                <label for="fileInput" class="file-upload-label">Vybrat soubor</label>
+                <div id="fileStatus"></div>
+            </div>
+            
+            <div class="step hidden" id="step3">
+                <h2>✨ Krok 3: Generovat</h2>
+                <button class="button" id="generateBtn" onclick="generate()">🚀 Spustit</button>
+                
+                <div id="progressContainer" class="hidden">
+                    <div class="progress">
+                        <div class="progress-bar" id="progressBar">0%</div>
+                    </div>
+                </div>
+                
+                <div id="generationLog" class="log hidden"></div>
+                
+                <div id="emailsContainer" class="hidden">
+                    <h3>📧 Vygenerované emaily:</h3>
+                    <button class="button" onclick="downloadAll()">⬇️ Stáhnout</button>
+                    <div id="emailsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API endpoint - automaticky detekuje localhost nebo produkci
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : window.location.origin;
+        
+        let leads = [];
+        let settings = { userName: 'Martin Šepel', userPhone: '608507623' };
+        let generatedEmails = [];
+        
+        function saveSettings() {
+            settings.userName = document.getElementById('userName').value;
+            settings.userPhone = document.getElementById('userPhone').value;
+            showStatus('settingsStatus', '✅ Uloženo!', 'success');
+        }
+        
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
+                    
+                    leads = json.map((row, i) => ({
+                        id: i,
+                        name: row['Jméno'] || '',
+                        email: row['Email'] || '',
+                        phone: row['Telefonní číslo'] || '',
+                        company: row['Jméno firmy'] || ''
+                    })).filter(l => l.name && l.email);
+                    
+                    if (leads.length === 0) {
+                        showStatus('fileStatus', '❌ Žádné leady', 'error');
+                        return;
+                    }
+                    
+                    showStatus('fileStatus', `✅ Načteno ${leads.length} leadů`, 'success');
+                    document.getElementById('step3').classList.remove('hidden');
+                } catch (error) {
+                    showStatus('fileStatus', '❌ Chyba: ' + error.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        async function generate() {
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('progressContainer').classList.remove('hidden');
+            document.getElementById('generationLog').classList.remove('hidden');
+            
+            generatedEmails = [];
+            let processed = 0;
+            const total = leads.length;
+            
+            addLog(`🚀 SPOUŠTÍM pro ${total} leadů`);
+            
+            for (let lead of leads) {
+                try {
+                    addLog(`\n📧 ${lead.name} - ${lead.company}`);
+                    addLog(`  🔍 Vyhledávám web...`);
+                    
+                    const response = await fetch(`${API_URL}/api/generate-email`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lead, settings })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (result.webInfo.found) {
+                            addLog(`  ✅ Web: ${result.webInfo.url}`);
+                        } else {
+                            addLog(`  ⚠️  Web nenalezen`);
+                        }
+                        addLog(`  ✅ Email vygenerován`);
+                        
+                        generatedEmails.push({
+                            lead,
+                            ...result.email,
+                            webInfo: result.webInfo
+                        });
+                    } else {
+                        addLog(`  ❌ ${result.error}`);
+                    }
+                    
+                    processed++;
+                    updateProgress((processed/total)*100, `${processed}/${total}`);
+                    
+                } catch (error) {
+                    addLog(`  ❌ ${error.message}`);
+                    processed++;
+                }
+                
+                await sleep(2000);
+            }
+            
+            addLog(`\n🎉 HOTOVO!`);
+            document.getElementById('generateBtn').disabled = false;
+            displayEmails();
+        }
+        
+        function displayEmails() {
+            const container = document.getElementById('emailsContainer');
+            const list = document.getElementById('emailsList');
+            list.innerHTML = '';
+            
+            generatedEmails.forEach((email, i) => {
+                const card = document.createElement('div');
+                card.className = 'email-card';
+                
+                let webInfoHtml = '';
+                if (email.webInfo && email.webInfo.found) {
+                    webInfoHtml = `<div class="web-info">🌐 ${email.webInfo.url}</div>`;
+                }
+                
+                card.innerHTML = `
+                    <h4>📧 ${email.lead.name} - ${email.lead.company}</h4>
+                    ${webInfoHtml}
+                    <div class="email-subject"><strong>Předmět:</strong> ${email.subject}</div>
+                    <div class="email-body">${email.body}</div>
+                    <button class="button" onclick="copy(${i})" style="margin-top:15px">📋 Zkopírovat</button>
+                `;
+                list.appendChild(card);
+            });
+            
+            container.classList.remove('hidden');
+        }
+        
+        function copy(i) {
+            const email = generatedEmails[i];
+            navigator.clipboard.writeText(`Předmět: ${email.subject}\n\n${email.body}`);
+            alert('✅ Zkopírováno!');
+        }
+        
+        function downloadAll() {
+            let text = `EMAILY - ${new Date().toLocaleDateString('cs-CZ')}\n\n`;
+            generatedEmails.forEach((email, i) => {
+                text += `EMAIL #${i+1}\n${email.lead.name} <${email.lead.email}>\n`;
+                if (email.webInfo && email.webInfo.found) {
+                    text += `Web: ${email.webInfo.url}\n`;
+                }
+                text += `\nPŘEDMĚT: ${email.subject}\n\n${email.body}\n\n${'='.repeat(80)}\n\n`;
+            });
+            const blob = new Blob([text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'emaily.txt';
+            a.click();
+        }
+        
+        function showStatus(id, msg, type) {
+            document.getElementById(id).innerHTML = `<div class="status ${type}">${msg}</div>`;
+        }
+        
+        function updateProgress(percent, text) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressBar').textContent = Math.round(percent) + '%';
+        }
+        
+        function addLog(msg) {
+            const log = document.getElementById('generationLog');
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toLocaleTimeString('cs-CZ')}] ${msg}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function sleep(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+    </script>
+</body>
+</html>
